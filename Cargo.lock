@@ -735,7 +735,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "meet-cli"
+name = "meetctl"
 version = "0.1.0"
 dependencies = [
  "backoff",
