@@ -1,3 +1,5 @@
+use std::{fmt::format, vec};
+
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
@@ -10,7 +12,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Starts Meet in a Chrom[e|ium] instance with debug access
-    Launch {},
+    Launch { profile: Option<String> },
     /// Takes a room name, alias or url
     Join { room: String },
     /// Starts sharing your screen
@@ -21,13 +23,21 @@ fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::Launch {}) => {
+        Some(Commands::Launch { profile }) => {
+            let mut args = vec![
+                "--remote-debugging-port=9222",
+                "--no-first-run",
+                "--no-default-browser-check",
+            ];
+
+            let parg: String;
+            if let Some(p) = profile {
+                parg = format!("--profile-directory={}", p);
+                args.push(&parg)
+            }
+
             std::process::Command::new("chromium")
-                .args([
-                    "--remote-debugging-port=9222",
-                    "--no-first-run",
-                    "--no-default-browser-check",
-                ])
+                .args(args)
                 .spawn()
                 .expect("Failed to launch");
 
