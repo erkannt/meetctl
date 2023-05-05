@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use headless_chrome::Browser;
 use serde::Deserialize;
 
 #[derive(Parser)]
@@ -41,15 +42,35 @@ fn main() {
                 .args(args)
                 .spawn()
                 .expect("Failed to launch");
-
+        }
+        Some(Commands::Join { room }) => {
             let debug_ws_url =
                 backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
                     .expect("Failed to get browser info");
 
             println!("{}", debug_ws_url);
-        }
-        Some(Commands::Join { room }) => {
-            println!("Not implemented ({})", room)
+            let browser = Browser::connect(debug_ws_url).expect("Failed to connect to browser");
+            let tab = browser
+                .get_tabs()
+                .lock()
+                .unwrap()
+                .clone()
+                .into_iter()
+                .find(|t| t.get_title().expect("Can't get tab title").contains("Meet"))
+                .unwrap();
+            tab.activate().unwrap();
+            tab.find_element("img[aria-label=\"Return to home screen\"]")
+                .unwrap()
+                .click()
+                .unwrap();
+            tab.wait_for_element("#i8").unwrap().focus().unwrap();
+
+            tab.send_character(room)
+                .unwrap()
+                .press_key("Tab")
+                .unwrap()
+                .press_key("Enter")
+                .unwrap();
         }
         Some(Commands::Share {}) => {
             println!("Not implemented")
