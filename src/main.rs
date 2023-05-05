@@ -59,10 +59,7 @@ fn main() {
                 .find(|t| t.get_title().expect("Can't get tab title").contains("Meet"))
                 .unwrap();
             tab.activate().unwrap();
-            tab.find_element("img[aria-label=\"Return to home screen\"]")
-                .unwrap()
-                .click()
-                .unwrap();
+            tab.navigate_to("https://meet.google.com").unwrap();
             tab.wait_for_element("#i8").unwrap().focus().unwrap();
 
             tab.send_character(room)
