@@ -1,6 +1,5 @@
-use std::{fmt::format, vec};
-
 use clap::{Parser, Subcommand};
+use serde::Deserialize;
 
 #[derive(Parser)]
 #[command(arg_required_else_help = true)]
@@ -36,15 +35,18 @@ fn main() {
                 args.push(&parg)
             }
 
+            args.push("https://meet.google.com");
+
             std::process::Command::new("chromium")
                 .args(args)
                 .spawn()
                 .expect("Failed to launch");
 
-            let browser_info =
-                backoff::retry(backoff::ExponentialBackoff::default(), get_browser_info)
+            let debug_ws_url =
+                backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
                     .expect("Failed to get browser info");
-            println!("{}", browser_info)
+
+            println!("{}", debug_ws_url);
         }
         Some(Commands::Join { room }) => {
             println!("Not implemented ({})", room)
@@ -56,7 +58,14 @@ fn main() {
     }
 }
 
-fn get_browser_info() -> Result<String, backoff::Error<reqwest::Error>> {
-    let text = reqwest::blocking::get("http://127.0.0.1:9222/json/version")?.text()?;
-    return Ok(text);
+#[derive(Deserialize)]
+#[allow(non_snake_case)]
+struct VersionResponse {
+    webSocketDebuggerUrl: String,
+}
+
+fn get_debug_url() -> Result<String, backoff::Error<reqwest::Error>> {
+    let response: VersionResponse =
+        reqwest::blocking::get("http://127.0.0.1:9222/json/version")?.json()?;
+    return Ok(response.webSocketDebuggerUrl);
 }
