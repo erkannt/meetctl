@@ -67,6 +67,18 @@ fn main() {
                 .unwrap()
                 .press_key("Enter")
                 .unwrap();
+
+            std::thread::sleep(Duration::from_millis(100));
+
+            browser
+                .get_tabs()
+                .lock()
+                .unwrap()
+                .clone()
+                .into_iter()
+                .filter(|t| !t.get_title().unwrap().contains("Meet"))
+                .map(|t| t.close(false).unwrap())
+                .for_each(drop);
         }
         None => {}
     }
