@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use clap::{Parser, Subcommand};
 use headless_chrome::Browser;
 use serde::Deserialize;
@@ -15,8 +17,6 @@ enum Commands {
     Launch { profile: Option<String> },
     /// Takes a room name, alias or url
     Join { room: String },
-    /// Starts sharing your screen
-    Share {},
 }
 
 fn main() {
@@ -48,7 +48,6 @@ fn main() {
                 backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
                     .expect("Failed to get browser info");
 
-            println!("{}", debug_ws_url);
             let browser = Browser::connect(debug_ws_url).expect("Failed to connect to browser");
             let tab = browser
                 .get_tabs()
@@ -68,9 +67,6 @@ fn main() {
                 .unwrap()
                 .press_key("Enter")
                 .unwrap();
-        }
-        Some(Commands::Share {}) => {
-            println!("Not implemented")
         }
         None => {}
     }
