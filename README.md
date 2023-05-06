@@ -10,7 +10,7 @@ Sadly can't get it to share the full screen as the associated pop up isn't acces
 
 `cargo install --path .`
 
-Or download the binary from one of the GH actions artifacts.
+Or download the binary from the [Releases](https://github.com/erkannt/meetctl/releases).
 
 ### Usage
 
