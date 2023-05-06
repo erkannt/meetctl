@@ -13,7 +13,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Starts Meet in a Chrom[e|ium] instance with debug access
+    /// Starts Meet in a chromium instance with debug access
     Launch { profile: Option<String> },
     /// Takes a room name, alias or url
     Join { room: String },
