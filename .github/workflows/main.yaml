@@ -18,7 +18,10 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: cargo build --release
+        run: |
+          cargo build --release
+          ls -l target/release
+          tree
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
