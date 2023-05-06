@@ -18,12 +18,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: |
-          cargo build --release
-          ls -l target/release
-          tree
+        run: cargo build --release
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          path: target/release/meetctl
+          files: target/release/meetctl
