@@ -10,18 +10,42 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup rust
-        run: rustup toolchain install stable --profile minimal
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
 
       - name: Setup rust cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Build
+      - name: Build for Linux
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+
+      - name: Build for Intel Macs
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --target x86_64-apple-darwin
+
+      - name: Build for ARM Macs
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --target aarch64-apple-darwin
+
+      - name: Rename binaries for release
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
-          cargo build --release
-          cp target/release/meetctl ./meetctl_linux_amd64
+          cp target/x86_64-unknown-linux-gnu/release/meetctl ./meetctl_linux_amd64
+          cp target/x86_64-apple-darwin/release/meetctl ./meetctl_darwin_amd64
+          cp target/aarch64-apple-darwin/release/meetctl ./meetctl_darwin_arm
 
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: meetctl_linux_amd64
+          files: |
+            meetctl_linux_amd64
+            meetctl_darwin_amd64
+            meetctl_darwin_arm
