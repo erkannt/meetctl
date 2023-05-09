@@ -1,3 +1,5 @@
+use std::process::Stdio;
+
 use clap::{Parser, Subcommand};
 use headless_chrome::Browser;
 use serde::Deserialize;
@@ -37,6 +39,7 @@ fn main() {
             args.push("https://meet.google.com");
 
             std::process::Command::new("chromium")
+                .stderr(Stdio::null())
                 .args(args)
                 .spawn()
                 .expect("Failed to launch");
