@@ -42,33 +42,14 @@ fn main() {
                 .expect("Failed to launch");
         }
         Some(Commands::Join { room }) => {
-            let room_url = format!("https://meet.google.com/{}", room);
-
             let debug_ws_url =
                 backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
                     .expect("Failed to get browser info");
-
             let browser = Browser::connect(debug_ws_url).expect("Failed to connect to browser");
-            let tab = browser
-                .get_tabs()
-                .lock()
-                .unwrap()
-                .clone()
-                .into_iter()
-                .find(|t| t.get_url().contains("meet.google.com"))
-                .unwrap();
-            tab.activate().unwrap();
-            tab.navigate_to(&room_url).unwrap();
+            let room_url = format!("https://meet.google.com/{}", room);
 
-            browser
-                .get_tabs()
-                .lock()
-                .unwrap()
-                .clone()
-                .into_iter()
-                .filter(|t| t.get_url().contains("about:blank"))
-                .map(|t| t.close(false).unwrap())
-                .for_each(drop);
+            join_room(&browser, room_url);
+            close_empty_tabs(browser);
         }
         None => {}
     }
@@ -84,4 +65,29 @@ fn get_debug_url() -> Result<String, backoff::Error<reqwest::Error>> {
     let response: VersionResponse =
         reqwest::blocking::get("http://127.0.0.1:9222/json/version")?.json()?;
     return Ok(response.webSocketDebuggerUrl);
+}
+
+fn join_room(browser: &Browser, room_url: String) {
+    let tab = browser
+        .get_tabs()
+        .lock()
+        .unwrap()
+        .clone()
+        .into_iter()
+        .find(|t| t.get_url().contains("meet.google.com"))
+        .unwrap();
+    tab.activate().unwrap();
+    tab.navigate_to(&room_url).unwrap();
+}
+
+fn close_empty_tabs(browser: Browser) {
+    browser
+        .get_tabs()
+        .lock()
+        .unwrap()
+        .clone()
+        .into_iter()
+        .filter(|t| t.get_url().contains("about:blank"))
+        .map(|t| t.close(false).unwrap())
+        .for_each(drop);
 }
