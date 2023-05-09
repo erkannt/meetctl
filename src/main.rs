@@ -57,6 +57,16 @@ fn main() {
                 .unwrap();
             tab.activate().unwrap();
             tab.navigate_to(&room_url).unwrap();
+
+            browser
+                .get_tabs()
+                .lock()
+                .unwrap()
+                .clone()
+                .into_iter()
+                .filter(|t| t.get_url().contains("about:blank"))
+                .map(|t| t.close(false).unwrap())
+                .for_each(drop);
         }
         None => {}
     }
