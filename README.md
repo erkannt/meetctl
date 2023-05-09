@@ -2,9 +2,9 @@
 
 Join Google Meet rooms from the command line.
 
-Uses debug websocket connection to the browser to interact with the Google Meet UI on your behalf.
+Uses debug websocket connection to the browser to join rooms in an existing Meet tab.
 
-Sadly can't get it to share the full screen as the associated pop up isn't accessible via the debug websocket.
+Sadly can't get it to share the screen as the associated pop up isn't accessible via the debug websocket.
 
 ### Installation
 
@@ -19,6 +19,6 @@ meetctl launch <name-of-your-profile-directory>
 meetctl join <room-name-or-url>
 ```
 
-The join command will operate on a tab with _Meet_ in its title and then close all other tabs.
+The join command will operate on a tab with `meet.google.com` in its url and then close all other tabs.
 
 You can run the `join` command if you are already in a room. It will leave the room for you.
