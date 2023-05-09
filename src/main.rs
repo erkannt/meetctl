@@ -44,6 +44,8 @@ fn main() {
                 .expect("Failed to launch");
         }
         Some(Commands::Join { room }) => {
+            let room_url = format!("https://meet.google.com/{}", room);
+
             let debug_ws_url =
                 backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
                     .expect("Failed to get browser info");
@@ -55,30 +57,10 @@ fn main() {
                 .unwrap()
                 .clone()
                 .into_iter()
-                .find(|t| t.get_title().expect("Can't get tab title").contains("Meet"))
+                .find(|t| t.get_url().contains("meet.google.com"))
                 .unwrap();
             tab.activate().unwrap();
-            tab.navigate_to("https://meet.google.com").unwrap();
-            tab.wait_for_element("#i8").unwrap().focus().unwrap();
-
-            tab.send_character(room)
-                .unwrap()
-                .press_key("Tab")
-                .unwrap()
-                .press_key("Enter")
-                .unwrap();
-
-            std::thread::sleep(Duration::from_millis(100));
-
-            browser
-                .get_tabs()
-                .lock()
-                .unwrap()
-                .clone()
-                .into_iter()
-                .filter(|t| !t.get_title().unwrap().contains("Meet"))
-                .map(|t| t.close(false).unwrap())
-                .for_each(drop);
+            tab.navigate_to(&room_url).unwrap();
         }
         None => {}
     }
