@@ -44,7 +44,9 @@ fn main() {
         Some(Commands::Join { room }) => {
             let room_url = format!("https://meet.google.com/{}", room);
 
-            let debug_ws_url = get_debug_url().expect("Failed to get browser info");
+            let debug_ws_url =
+                backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
+                    .expect("Failed to get browser info");
 
             let browser = Browser::connect(debug_ws_url).expect("Failed to connect to browser");
             let tab = browser
@@ -78,7 +80,7 @@ struct VersionResponse {
     webSocketDebuggerUrl: String,
 }
 
-fn get_debug_url() -> Result<String, reqwest::Error> {
+fn get_debug_url() -> Result<String, backoff::Error<reqwest::Error>> {
     let response: VersionResponse =
         reqwest::blocking::get("http://127.0.0.1:9222/json/version")?.json()?;
     return Ok(response.webSocketDebuggerUrl);
