@@ -43,10 +43,7 @@ fn main() {
             .unwrap();
         }
         Some(Commands::Join { room }) => {
-            let debug_ws_url =
-                backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
-                    .expect("Failed to get browser info");
-            let browser = Browser::connect(debug_ws_url).expect("Failed to connect to browser");
+            let browser = connect_to_browser();
 
             let mut room_url = room.to_string();
             if !room.contains("meet.google.com") {
@@ -57,39 +54,21 @@ fn main() {
             close_empty_tabs(browser);
         }
         Some(Commands::Share) => {
-            let debug_ws_url =
-                backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
-                    .expect("Failed to get browser info");
-            let browser = Browser::connect(debug_ws_url).expect("Failed to connect to browser");
-            let tab = browser
-                .get_tabs()
-                .lock()
-                .unwrap()
-                .clone()
-                .into_iter()
-                .find(|t| t.get_url().contains("meet.google.com"))
-                .unwrap();
+            let browser = connect_to_browser();
+            let tab = get_meet_tab(&browser);
             tab.activate().unwrap();
+
             tab.find_element("button[aria-label='Present now']")
                 .unwrap()
                 .focus()
                 .unwrap();
             tab.press_key("Enter").unwrap().press_key("Enter").unwrap();
+
             close_empty_tabs(browser);
         }
         Some(Commands::New) => {
-            let debug_ws_url =
-                backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
-                    .expect("Failed to get browser info");
-            let browser = Browser::connect(debug_ws_url).expect("Failed to connect to browser");
-            let tab = browser
-                .get_tabs()
-                .lock()
-                .unwrap()
-                .clone()
-                .into_iter()
-                .find(|t| t.get_url().contains("meet.google.com"))
-                .unwrap();
+            let browser = connect_to_browser();
+            let tab = get_meet_tab(&browser);
             tab.activate().unwrap();
 
             let meeting_url = tab
@@ -116,6 +95,23 @@ fn get_debug_url() -> Result<String, backoff::Error<reqwest::Error>> {
     let response: VersionResponse =
         reqwest::blocking::get("http://127.0.0.1:9222/json/version")?.json()?;
     return Ok(response.webSocketDebuggerUrl);
+}
+
+fn connect_to_browser() -> headless_chrome::Browser {
+    let debug_ws_url = backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
+        .expect("Failed to get debug url");
+    return Browser::connect(debug_ws_url).expect("Failed to connect to browser");
+}
+
+fn get_meet_tab(browser: &Browser) -> std::sync::Arc<headless_chrome::Tab> {
+    browser
+        .get_tabs()
+        .lock()
+        .unwrap()
+        .clone()
+        .into_iter()
+        .find(|t| t.get_url().contains("meet.google.com"))
+        .unwrap()
 }
 
 fn join_room(browser: &Browser, room_url: String) {
