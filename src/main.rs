@@ -17,6 +17,8 @@ enum Commands {
     Join { room: String },
     /// Share you entire screen
     Share,
+    /// Create a new meeting and output its url
+    New,
 }
 
 fn main() {
@@ -73,6 +75,31 @@ fn main() {
                 .focus()
                 .unwrap();
             tab.press_key("Enter").unwrap().press_key("Enter").unwrap();
+            close_empty_tabs(browser);
+        }
+        Some(Commands::New) => {
+            let debug_ws_url =
+                backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
+                    .expect("Failed to get browser info");
+            let browser = Browser::connect(debug_ws_url).expect("Failed to connect to browser");
+            let tab = browser
+                .get_tabs()
+                .lock()
+                .unwrap()
+                .clone()
+                .into_iter()
+                .find(|t| t.get_url().contains("meet.google.com"))
+                .unwrap();
+            tab.activate().unwrap();
+
+            let meeting_url = tab
+                .navigate_to("https://meet.google.com/new")
+                .unwrap()
+                .wait_until_navigated()
+                .unwrap()
+                .get_url();
+            println!("{}", meeting_url);
+
             close_empty_tabs(browser);
         }
         None => {}
