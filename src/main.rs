@@ -15,6 +15,8 @@ enum Commands {
     Launch { profile: String },
     /// Takes a room name, alias or url
     Join { room: String },
+    /// Share you entire screen
+    Share,
 }
 
 fn main() {
@@ -46,6 +48,27 @@ fn main() {
             let room_url = format!("https://meet.google.com/{}", room);
 
             join_room(&browser, room_url);
+            close_empty_tabs(browser);
+        }
+        Some(Commands::Share) => {
+            let debug_ws_url =
+                backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
+                    .expect("Failed to get browser info");
+            let browser = Browser::connect(debug_ws_url).expect("Failed to connect to browser");
+            let tab = browser
+                .get_tabs()
+                .lock()
+                .unwrap()
+                .clone()
+                .into_iter()
+                .find(|t| t.get_url().contains("meet.google.com"))
+                .unwrap();
+            tab.activate().unwrap();
+            tab.find_element("button[aria-label='Present now']")
+                .unwrap()
+                .focus()
+                .unwrap();
+            tab.press_key("Enter").unwrap().press_key("Enter").unwrap();
             close_empty_tabs(browser);
         }
         None => {}
