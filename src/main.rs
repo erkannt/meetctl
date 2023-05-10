@@ -45,7 +45,11 @@ fn main() {
                 backoff::retry(backoff::ExponentialBackoff::default(), get_debug_url)
                     .expect("Failed to get browser info");
             let browser = Browser::connect(debug_ws_url).expect("Failed to connect to browser");
-            let room_url = format!("https://meet.google.com/{}", room);
+
+            let mut room_url = room.to_string();
+            if !room.contains("meet.google.com") {
+                room_url = format!("https://meet.google.com/{}", room);
+            }
 
             join_room(&browser, room_url);
             close_empty_tabs(browser);
