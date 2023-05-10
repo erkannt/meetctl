@@ -1,5 +1,3 @@
-use std::process::Stdio;
-
 use clap::{Parser, Subcommand};
 use headless_chrome::Browser;
 use serde::Deserialize;
@@ -14,7 +12,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Starts Meet in a chromium instance with debug access
-    Launch { profile: Option<String> },
+    Launch { profile: String },
     /// Takes a room name, alias or url
     Join { room: String },
 }
@@ -24,25 +22,21 @@ fn main() {
 
     match &cli.command {
         Some(Commands::Launch { profile }) => {
-            let mut args = vec![
-                "--remote-debugging-port=9222",
-                "--no-first-run",
-                "--no-default-browser-check",
-            ];
-
-            let parg: String;
-            if let Some(p) = profile {
-                parg = format!("--profile-directory={}", p);
-                args.push(&parg)
-            }
-
-            args.push("https://meet.google.com");
-
-            std::process::Command::new("chromium")
-                .stderr(Stdio::null())
-                .args(args)
-                .spawn()
-                .expect("Failed to launch");
+            let options = run_script::ScriptOptions::new();
+            run_script::spawn_script!(
+                r#"
+                 chromium \
+                 --remote-debugging-port=9222 \
+                 --no-first-run \
+                 --no-default-browser-check \
+                 --auto-select-desktop-capture-source="Entire screen" \
+                 $1 \
+                 https://meet.google.com &
+                "#,
+                &vec![format!("--profile-directory={}", profile)],
+                &options
+            )
+            .unwrap();
         }
         Some(Commands::Join { room }) => {
             let debug_ws_url =
