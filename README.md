@@ -12,6 +12,8 @@ To allow sharing of the entire screen without needing a human to interact with t
 
 Or download the binary from the [Releases](https://github.com/erkannt/meetctl/releases).
 
+Currently expects `chromium` to be installed and in your `PATH`.
+
 ### Usage
 
 Start with `launch` then you can use any of the other commands.
