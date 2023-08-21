@@ -115,16 +115,19 @@ fn get_meet_tab(browser: &Browser) -> std::sync::Arc<headless_chrome::Tab> {
 }
 
 fn join_room(browser: &Browser, room_url: String) {
-    let tab = browser
+    let tab: Vec<String> = browser
         .get_tabs()
         .lock()
         .unwrap()
         .clone()
         .into_iter()
-        .find(|t| t.get_url().contains("meet.google.com"))
-        .unwrap();
-    tab.activate().unwrap();
-    tab.navigate_to(&room_url).unwrap();
+        .map(|t| t.get_url())
+        .collect();
+    println!("{:?}", tab)
+    // .find(|t| t.get_url().contains("meet.google.com"))
+    // .unwrap();
+    // tab.activate().unwrap();
+    // tab.navigate_to(&room_url).unwrap();
 }
 
 fn close_empty_tabs(browser: Browser) {
